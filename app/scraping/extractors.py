@@ -8,6 +8,7 @@ import trafilatura
 import extruct
 from w3lib.html import get_base_url
 from app.schemas.models import Product, Policy, FAQ, SocialHandle, ContactInfo, ImportantLinks
+from bs4 import BeautifulSoup
 
 PRODUCT_PAGE_RE = re.compile(r"/products/[^/]+/?$")
 
@@ -120,13 +121,29 @@ async def hero_products_from_home(client: httpx.AsyncClient, base: str, home_htm
     return heroes
 
 # ---------- Policies ----------
+
 async def extract_policy(client: httpx.AsyncClient, url: str, typ: str) -> Optional[Policy]:
     html = await fetch_text(client, url)
     if not html:
         return None
-    text = trafilatura.extract(html, include_comments=False, include_tables=False) or None
-    return Policy(type=typ, url=url, content_html=html, content_text=text)
-
+    
+    # Use trafilatura to extract readable text
+    text = trafilatura.extract(html, include_comments=False, include_tables=False)
+    
+    # Fallback: if trafilatura fails, strip tags manually
+    if not text:
+        from selectolax.parser import HTMLParser
+        tree = HTMLParser(html)
+        text = tree.text(separator=" ").strip()
+        if not text:
+            text = None
+    
+    return Policy(
+        type=typ,
+        url=url,
+        content_html=None,
+        content_text=text
+    )
 # ---------- FAQs ----------
 def parse_faqs_from_html(html: str, base: str, page_url: str) -> List[dict]:
     tree = HTMLParser(html)
