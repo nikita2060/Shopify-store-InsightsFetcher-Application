@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      - INSIGHTS_MAX_CONCURRENCY=6
+      - INSIGHTS_USER_AGENT=ShopifyInsightsBot/1.0 (+https://example.com)
+  # Uncomment to use MySQL bonus
+  # db:
+  #   image: mysql:8
+  #   command: --default-authentication-plugin=mysql_native_password
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_DATABASE: insights
+  #   ports: ["3306:3306"]
